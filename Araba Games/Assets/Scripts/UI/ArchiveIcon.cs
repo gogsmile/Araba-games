@@ -27,6 +27,6 @@ public class ArchiveIcon : MonoBehaviour
     private void OpenArchive()
     {
         if (archiveWindow != null && archiveData != null)
-            archiveWindow.OpenArchive(archiveData);
+            archiveWindow.OpenArchive(archiveData, gameObject);
     }
 }
