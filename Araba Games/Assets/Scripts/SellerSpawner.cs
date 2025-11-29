@@ -3,54 +3,90 @@ using UnityEngine;
 
 public class SellerSpawner : MonoBehaviour
 {
-    public GameObject SellerPrefab;
-    public Transform SpawnParent;
-    public int SellersCount = 5;
+    [Header("Spawn settings")]
+    public GameObject SellerPrefab;       // Префаб продавца
+    public Transform SpawnParent;         // Panel/контейнер для UI
+    public int StartSellersCount = 3;     // Стартовое количество продавцов
+    public float SpawnInterval = 10f;     // Интервал появления новых продавцов
 
-    public int MinFilesPerArchive = 3;
-    public int MaxFilesPerArchive = 7;
-
+    [Header("Manual seller list")]
     public List<SellerData> SellerList = new List<SellerData>();
 
-    void Start()
-    {
-        SpawnSellers();
-    }
+    [Header("Archive Names List")]
+    public ArchiveNameListSO ArchiveNameList; // Список названий архивов
 
-    void SpawnSellers()
+    private float timer = 0f;
+
+    private void Start()
     {
-        for (int i = 0; i < SellersCount; i++)
+        // Спавн стартовых продавцов
+        for (int i = 0; i < Mathf.Min(StartSellersCount, SellerList.Count); i++)
         {
-            GameObject sellerGO = Instantiate(SellerPrefab, SpawnParent);
-            SellerData data = GenerateSellerData(i);
-            sellerGO.GetComponent<SellerBehaviour>().Setup(data);
-            SellerList.Add(data);
+            SpawnSeller(SellerList[i]);
         }
     }
 
-    SellerData GenerateSellerData(int id)
+    private void Update()
     {
-        SellerData data = new SellerData();
-        data.SellerName = "Seller " + id;
-        data.Rating = Random.Range(50, 101);
+        timer += Time.deltaTime;
+        if (timer >= SpawnInterval)
+        {
+            timer = 0f;
+            if (SellerList.Count > 0)
+            {
+                int idx = Random.Range(0, SellerList.Count);
+                SpawnSeller(SellerList[idx]);
+            }
+        }
+    }
+
+    private void SpawnSeller(SellerData data)
+    {
+        if (SellerPrefab == null || SpawnParent == null) return;
+
+        GameObject go = Instantiate(SellerPrefab, SpawnParent);
+        var sb = go.GetComponent<SellerBehaviour>();
 
         // Генерация архива
+        int fileCount = Random.Range(data.MinFiles, data.MaxFiles + 1);
         ArchiveData archive = new ArchiveData();
-        int fileCount = Random.Range(MinFilesPerArchive, MaxFilesPerArchive + 1);
+
+        // Выбираем случайное название из ArchiveNameList
+        if (ArchiveNameList != null && ArchiveNameList.Names.Count > 0)
+        {
+            int randIndex = Random.Range(0, ArchiveNameList.Names.Count);
+            archive.ArchiveName = ArchiveNameList.Names[randIndex];
+        }
+        else
+        {
+            archive.ArchiveName = $"{data.SellerName}'s Archive";
+        }
+
+        // Генерация файлов архива
         for (int i = 0; i < fileCount; i++)
         {
-            FileData file = new FileData();
-            file.Index = i;
-            file.FileName = "File_" + i;
-            file.Description = "Description of file " + i;
-            file.BasePrice = Random.Range(10, 51);
-            file.IsMemoryFragment = (Random.value < 0.2f); // 20% шанс быть фрагментом памяти
+            if (data.PossibleFiles.Count == 0) continue;
+
+            int fIdx = Random.Range(0, data.PossibleFiles.Count);
+            var fileSO = data.PossibleFiles[fIdx];
+
+            var file = new FileData
+            {
+                Index = fileSO.Index,
+                FileName = fileSO.FileName,
+                Description = fileSO.Description,
+                BasePrice = fileSO.BasePrice,
+                DropChance = fileSO.DropChance,
+                IsMemoryFragment = fileSO.MemoryPoints > 0
+            };
+
             archive.Files.Add(file);
         }
 
-        data.Archive = archive;
-        data.ArchivePrice = Mathf.RoundToInt((data.Rating / 100f) * fileCount);
+        // Цена архива: (Rating / 100) * Кол-во файлов
+        int price = Mathf.RoundToInt((data.Rating / 100f) * archive.Files.Count);
 
-        return data;
+        // Передаём имя продавца, архив и цену в SellerBehaviour
+        sb.Setup(data.SellerName, archive, price);
     }
 }

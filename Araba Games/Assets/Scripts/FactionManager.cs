@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+п»їusing System.Collections.Generic;
 using UnityEngine;
 
 public enum FactionType { Corporates, Rebels, Hackers }
@@ -7,8 +7,8 @@ public enum FactionType { Corporates, Rebels, Hackers }
 public class Faction
 {
     public FactionType Type;
-    public int TrustLevel; // уровень доверия (0–100)
-    public List<int> WantedFileIndexes = new List<int>(); // какие файлы они покупают
+    public int TrustLevel = 50; // 0вЂ“100, СЃС‚Р°СЂС‚РѕРІРѕРµ РґРѕРІРµСЂРёРµ
+    public List<int> WantedFileIndexes = new List<int>();
 }
 
 public class FactionManager : MonoBehaviour
@@ -28,12 +28,14 @@ public class FactionManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    /// <summary>
-    /// Изменение доверия фракции
-    /// </summary>
+    public Faction GetFactionInfo(FactionType type)
+    {
+        return Factions.Find(f => f.Type == type);
+    }
+
     public void ChangeTrust(FactionType type, int amount)
     {
-        var faction = Factions.Find(f => f.Type == type);
+        var faction = GetFactionInfo(type);
         if (faction != null)
         {
             faction.TrustLevel += amount;
@@ -41,22 +43,25 @@ public class FactionManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Получение текущего доверия фракции
-    /// </summary>
     public int GetTrust(FactionType type)
     {
-        var faction = Factions.Find(f => f.Type == type);
+        var faction = GetFactionInfo(type);
         return faction != null ? faction.TrustLevel : 0;
     }
 
-    /// <summary>
-    /// Проверка, нужен ли фракции файл
-    /// </summary>
     public bool IsFileWanted(FactionType type, int fileIndex)
     {
-        var faction = Factions.Find(f => f.Type == type);
+        var faction = GetFactionInfo(type);
         if (faction == null) return false;
+
         return faction.WantedFileIndexes.Contains(fileIndex);
+    }
+
+    /// <summary>
+    /// РџРѕР»СѓС‡Р°РµРј РјРЅРѕР¶РёС‚РµР»СЊ РїСЂРёР±С‹Р»Рё 0.0 в†’ 1.0
+    /// </summary>
+    public float GetTrustMultiplier(FactionType type)
+    {
+        return GetTrust(type) / 100f;
     }
 }

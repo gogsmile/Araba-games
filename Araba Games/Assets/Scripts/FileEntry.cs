@@ -17,33 +17,34 @@ public class FileEntry : MonoBehaviour
         fileData = data;
         parentArchive = archive;
 
-        FileNameText.text = data.FileName;
-        DescriptionText.text = data.Description;
-        BasePriceText.text = "$" + data.BasePrice;
+        if (FileNameText != null)
+            FileNameText.text = fileData.FileName;
 
-        DestinationDropdown.onValueChanged.AddListener(OnDestinationSelected);
+        if (DescriptionText != null)
+            DescriptionText.text = fileData.Description;
+
+        if (BasePriceText != null)
+            BasePriceText.text = "$" + fileData.BasePrice;
+
+        if (DestinationDropdown != null)
+        {
+            DestinationDropdown.onValueChanged.RemoveAllListeners();
+            DestinationDropdown.onValueChanged.AddListener(OnDestinationSelected);
+            DestinationDropdown.value = 3; // по умолчанию Диск
+        }
     }
 
     private void OnDestinationSelected(int index)
     {
         switch (index)
         {
-            case 0: // Корпораты
-                SendToFaction(FactionType.Corporates);
-                break;
-            case 1: // Повстанцы
-                SendToFaction(FactionType.Rebels);
-                break;
-            case 2: // Хакеры
-                SendToFaction(FactionType.Hackers);
-                break;
-            case 3: // Диск
-                SendToDisk();
-                break;
+            case 0: SendToFaction(FactionType.Corporates); break;
+            case 1: SendToFaction(FactionType.Rebels); break;
+            case 2: SendToFaction(FactionType.Hackers); break;
+            case 3: SendToDisk(); break;
         }
 
-        // После выбора сбрасываем dropdown
-        DestinationDropdown.value = 3; // по умолчанию Диск или пустой пункт
+        DestinationDropdown.value = 3;
     }
 
     private void SendToFaction(FactionType faction)
@@ -52,13 +53,14 @@ public class FileEntry : MonoBehaviour
 
         if (isWanted)
         {
-            int profit = Mathf.RoundToInt(fileData.BasePrice * FactionManager.Instance.GetTrust(faction) / 100f);
-            PlayerInventory.Instance.AddMoney(profit);
-            FactionManager.Instance.ChangeTrust(faction, 1); // +D1 доверия
+            float multiplier = FactionManager.Instance.GetTrustMultiplier(faction);
+            int reward = Mathf.RoundToInt(fileData.BasePrice * multiplier);
+            PlayerInventory.Instance.AddMoney(reward);
+            FactionManager.Instance.ChangeTrust(faction, +1);
         }
         else
         {
-            FactionManager.Instance.ChangeTrust(faction, -1); // -D2 доверия
+            FactionManager.Instance.ChangeTrust(faction, -1);
         }
 
         RemoveFileFromArchive();
@@ -67,8 +69,11 @@ public class FileEntry : MonoBehaviour
     private void SendToDisk()
     {
         DiskStorage.Instance.AddFile(fileData);
+
         if (fileData.IsMemoryFragment)
-            PlayerInventory.Instance.MemoryPoints += 10; // L очков памяти
+        {
+            PlayerInventory.Instance.AddMemory(10); // L очков памяти
+        }
 
         RemoveFileFromArchive();
     }
@@ -78,7 +83,11 @@ public class FileEntry : MonoBehaviour
         parentArchive.Files.Remove(fileData);
 
         if (parentArchive.IsEmpty())
-            GetComponentInParent<ArchiveWindow>().CloseArchive();
+        {
+            var window = GetComponentInParent<ArchiveWindow>();
+            if (window != null)
+                window.CloseArchive();
+        }
 
         Destroy(gameObject);
     }

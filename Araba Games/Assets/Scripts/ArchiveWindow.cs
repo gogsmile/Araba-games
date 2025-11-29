@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 
 public class ArchiveWindow : MonoBehaviour
@@ -10,27 +9,26 @@ public class ArchiveWindow : MonoBehaviour
 
     private ArchiveData currentArchive;
 
-    /// <summary>
-    /// Открыть архив
-    /// </summary>
     public void OpenArchive(ArchiveData archive)
     {
         currentArchive = archive;
-        ArchiveNameText.text = archive.ArchiveName;
+        gameObject.SetActive(true);
 
-        // Очистка списка
+        if (ArchiveNameText != null)
+            ArchiveNameText.text = archive.ArchiveName;
+
+        // Очистка старых элементов
         foreach (Transform t in FileListParent)
             Destroy(t.gameObject);
 
-        // Создание элементов UI для каждого файла
+        // Создание элементов файлов
         foreach (var file in archive.Files)
         {
-            GameObject entry = Instantiate(FileEntryPrefab, FileListParent);
-            var fileEntry = entry.GetComponent<FileEntry>();
-            fileEntry.Setup(file, currentArchive);
+            GameObject entryGO = Instantiate(FileEntryPrefab, FileListParent);
+            var entry = entryGO.GetComponent<FileEntry>();
+            if (entry != null)
+                entry.Setup(file, currentArchive);
         }
-
-        gameObject.SetActive(true);
     }
 
     public void CloseArchive()

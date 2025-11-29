@@ -4,79 +4,72 @@ using UnityEngine.UI;
 
 public class SellerBehaviour : MonoBehaviour
 {
-    [Header("UI Elements")]
-    public TMP_Text NameText;      // Имя продавца
-    public TMP_Text PriceText;     // Цена архива
-    public Button BuyButton;       // Кнопка покупки
+    public TMP_Text SellerNameText;
+    public TMP_Text ArchiveNameText;
+    public TMP_Text PriceText;
+    public Button BuyButton;
 
-    [Header("Data")]
-    public SellerData Data;        // Данные продавца
+    private string sellerName;
+    private ArchiveData archive;
+    private int archivePrice;
 
     private void Start()
     {
         if (BuyButton != null)
         {
-            // Назначаем метод покупки на кнопку
+            BuyButton.onClick.RemoveAllListeners();
             BuyButton.onClick.AddListener(TryBuyArchive);
         }
 
         UpdateUI();
     }
 
-    /// <summary>
-    /// Устанавливаем данные продавца и обновляем UI
-    /// </summary>
-    public void Setup(SellerData data)
+    public void Setup(string sellerName, ArchiveData archive, int price)
     {
-        Data = data;
+        this.sellerName = sellerName;
+        this.archive = archive;
+        this.archivePrice = price;
         UpdateUI();
     }
 
-    /// <summary>
-    /// Обновление UI элементов
-    /// </summary>
     private void UpdateUI()
     {
-        if (Data == null) return;
+        if (SellerNameText != null)
+            SellerNameText.text = sellerName;
 
-        if (NameText != null)
-            NameText.text = Data.SellerName;
+        if (ArchiveNameText != null)
+            ArchiveNameText.text = archive != null ? archive.ArchiveName : "Archive";
 
         if (PriceText != null)
-            PriceText.text = "$" + Data.ArchivePrice;
+            PriceText.text = "$" + archivePrice;
     }
 
-    /// <summary>
-    /// Попытка купить архив
-    /// Проверяет зажатие ПКМ + ЛКМ
-    /// </summary>
     private void TryBuyArchive()
     {
-        if (!Input.GetMouseButton(1) || !Input.GetMouseButton(0))
-            return; // ПКМ + ЛКМ должны быть зажаты
-
-        if (PlayerInventory.Instance.Money >= Data.ArchivePrice)
+        if (PlayerInventory.Instance.Money >= archivePrice)
         {
-            // Списываем деньги
-            PlayerInventory.Instance.SpendMoney(Data.ArchivePrice);
+            PlayerInventory.Instance.SpendMoney(archivePrice);
+            PlayerInventory.Instance.AddArchive(archive);
 
-            // Добавляем архив в инвентарь
-            PlayerInventory.Instance.AddArchive(Data.Archive);
-
-            Debug.Log("Archive purchased: " + Data.Archive.ArchiveName);
-
-            // Создаём иконку на рабочем столе
-            if (DesktopManager.Instance != null && DesktopManager.Instance.ArchiveIconPrefab != null)
+            // Создаём иконку архива на рабочем столе
+            if (DesktopManager.Instance != null &&
+                DesktopManager.Instance.ArchiveIconPrefab != null &&
+                DesktopManager.Instance.DesktopPanel != null)
             {
                 GameObject iconGO = Instantiate(
                     DesktopManager.Instance.ArchiveIconPrefab,
                     DesktopManager.Instance.DesktopPanel
                 );
-                iconGO.GetComponent<ArchiveIcon>().Setup(Data.Archive, DesktopManager.Instance.ArchiveWindow);
+
+                iconGO.transform.SetParent(DesktopManager.Instance.DesktopPanel, false);
+                iconGO.transform.localScale = Vector3.one;
+
+                var archiveIcon = iconGO.GetComponent<ArchiveIcon>();
+                if (archiveIcon != null)
+                    archiveIcon.Setup(archive, DesktopManager.Instance.ArchiveWindow);
             }
 
-            // Можно удалить продавца после покупки, если нужно
-            // Destroy(gameObject);
+            Destroy(gameObject);
         }
         else
         {
