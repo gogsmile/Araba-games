@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: File0
   m_EditorClassIdentifier: 
   Index: 0
-  FileName: no
-  Description: no memory
+  FileName: "\u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u044B"
+  Description: "\u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u044B"
   BasePrice: 1
-  DropChance: 50
+  DropChance: 20
   MemoryPoints: 0

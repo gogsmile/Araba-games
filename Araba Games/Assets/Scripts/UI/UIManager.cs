@@ -22,12 +22,12 @@ public class UIManager : MonoBehaviour
     public void UpdateMoney(int amount)
     {
         if (MoneyText != null)
-            MoneyText.text = $"$ {amount}";
+            MoneyText.text = $"{amount}";
     }
 
     public void UpdateMemory(int points)
     {
         if (MemoryText != null)
-            MemoryText.text = $"Memory: {points}";
+            MemoryText.text = $"{points}";
     }
 }

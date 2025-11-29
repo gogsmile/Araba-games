@@ -60,6 +60,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50012d4625848514a919b4a20ef0558e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArchiveData:
+    ArchiveName: 
+    Files: []
   ArchiveNameText: {fileID: 7823163952528623042}
 --- !u!114 &246308142379768778
 MonoBehaviour:
@@ -81,8 +84,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: 65cd5e67acace264ab4ac96e11d25ca9, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
